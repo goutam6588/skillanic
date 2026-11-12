@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bulk Enquiry Form Tester</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            background: #f4f6f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .card {
+            background: #fff;
+            width: 500px;
+            max-width: 95%;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,.1);
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            background: #2563eb;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1d4ed8;
+        }
+
+        button:disabled {
+            opacity: .6;
+            cursor: not-allowed;
+        }
+
+        #log {
+            margin-top: 20px;
+            height: 350px;
+            overflow-y: auto;
+            background: #111;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 13px;
+            white-space: pre-wrap;
+        }
+
+        .progress {
+            margin-top: 20px;
+        }
+
+        progress {
+            width: 100%;
+            height: 22px;
+        }
+
+        .count {
+            text-align: center;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="card">
+
+    <h2>Bulk Enquiry Tester</h2>
+
+    <button id="startBtn">
+        Submit 200 Enquiries
+    </button>
+
+    <div class="progress">
+        <progress id="progress" value="0" max="50"></progress>
+        <div class="count" id="count">0 / 200</div>
+    </div>
+
+    <div id="log"></div>
+
+</div>
+
+<script>
+
+const SCRIPT_URL =
+"https://script.google.com/macros/s/AKfycbyVpJ8AQPDxg3IobCAo_YDC3hx4m2pSxcvHhdA5X9U4gK4A1IzL504-FvtfbVRiaZffgQ/exec";
+
+const TOTAL_SUBMISSIONS = 10;
+
+const courses = [
+    "Python Full Stack",
+    "MERN Stack",
+    "Java Full Stack",
+    "Data Science"
+];
+
+const startBtn = document.getElementById("startBtn");
+const progress = document.getElementById("progress");
+const count = document.getElementById("count");
+const log = document.getElementById("log");
+
+progress.max = TOTAL_SUBMISSIONS;
+
+function randomPhone() {
+    return "9" + Math.floor(100000000 + Math.random() * 900000000);
+}
+
+function randomCourse() {
+    return courses[Math.floor(Math.random() * courses.length)];
+}
+
+function write(message) {
+    log.innerHTML += message + "<br>";
+    log.scrollTop = log.scrollHeight;
+}
+
+function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function submitBulkForms() {
+
+    startBtn.disabled = true;
+
+    log.innerHTML = "";
+
+    for (let i = 1; i <= TOTAL_SUBMISSIONS; i++) {
+
+        const formData = new FormData();
+
+        formData.append("name", "Test User " + i);
+        formData.append("phone", randomPhone());
+        formData.append("email", `test${i}@gmail.com`);
+        formData.append("course", randomCourse());
+        formData.append("message", `Automated Test Enquiry #${i}`);
+
+        try {
+
+            await fetch(SCRIPT_URL, {
+                method: "POST",
+                mode: "no-cors",
+                body: formData
+            });
+
+            progress.value = i;
+            count.innerHTML = `${i} / ${TOTAL_SUBMISSIONS}`;
+
+            write(`✅ Submitted enquiry ${i}`);
+
+        }
+        catch(err){
+
+            write(`❌ Failed ${i}`);
+
+            console.error(err);
+        }
+
+        // Wait 500ms before next submission
+        await sleep(500);
+
+    }
+
+    write("<br><b>🎉 All enquiries submitted successfully.</b>");
+
+    startBtn.disabled = false;
+
+}
+
+startBtn.addEventListener("click", submitBulkForms);
+
+</script>
+
+</body>
+</html>
